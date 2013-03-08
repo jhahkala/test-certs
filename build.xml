@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+	Copyright (c) 2004 on behalf of the EU EGEE Project: 
+	The European Organization for Nuclear Research (CERN), 
+	Istituto Nazionale di Fisica Nucleare (INFN), Italy
+	Datamat Spa, Italy
+	Centre National de la Recherche Scientifique (CNRS), France
+	CS Systeme d'Information (CSSI), France
+	Royal Institute of Technology, Center for Parallel Computers (KTH-PDC), Sweden
+	Universiteit van Amsterdam (UvA), Netherlands
+	University of Helsinki (UH.HIP), Finland
+	University of Bergen (UiB), Norway
+	Council for the Central Laboratory of the Research Councils (CCLRC), United Kingdom
+
+	Build file for the GLite security test-utils component
+	
+	Authors: Joachim Flammer <Joachim.Flammer@Cern.ch>
+             Akos Frohner <Akos.Frohner@cern.ch>
+	Version info: $Id: build.xml,v 1.11 2006/06/02 21:23:24 szamsu Exp $
+
+	Revision history:
+	$ Log: build.xml,v $
+-->
+
+<project name="test-utils" default="dist">
+
+	<!-- ==============================================
+	      Builds the GLite security trustmanager component
+	     ============================================== -->
+	
+	<!-- =========================================
+	      Import properties (order is important)
+	     ========================================= -->
+	
+	<!-- Import baseline properties & user properties -->
+	<import file="../org.glite/project/baseline.properties.xml" />
+
+	<!-- import component build properties,
+		        component properties &
+		        component common properties -->
+	<import file="./project/properties.xml"/>
+	
+	<!-- import subsystem build properties,
+		        subsystem properties &
+		        subsystem common properties -->
+	<import file="${subsystem.properties.file}"/>
+
+	<!-- import global build properties &
+		        global properties -->
+	<import file="${global.properties.file}" />
+		
+	<!-- =========================================
+ 	      Load dependency property files (order is important)
+	     ========================================= -->
+	<property file="${user.dependencies.file}"/>
+	<property file="${component.dependencies.file}" />
+	<property file="${subsystem.dependencies.file}" />
+	<property file="${global.dependencies.file}"/>
+
+	<!-- =========================================
+                 Load configuration definitions (order is important)
+             ========================================= -->
+        <import file="${global.configure.options.file}"/>
+        <import file="${component.configure.options.file}"/>
+	
+	<!-- =========================================
+      	      Import task definitions (order is important)
+	     ========================================= -->
+	<import file="${subsystem.taskdefs.file}" />
+	<import file="${global.taskdefs.file}" />
+	
+	<!-- =========================================
+		 Load common targets
+	     ========================================= -->
+	<!-- Put your language target (java/c++-ant/c++-autotool/perl) here -->
+	<import file="${global.targets-java.file}" />
+		
+	<!-- =========================================
+		 Load version file 
+	     ========================================= -->
+    <exec executable="date" outputproperty="module.age">
+        <arg line="+%Y%m%d"/>
+    </exec>
+	<property file="${module.version.file}"/>
+	<property file="${module.build.file}"/>
+	
+	<!-- ==============================================
+		 Local private targets
+	     ============================================== -->
+	
+    <target name="localinit"/>
+
+	<target name="clean">
+            <delete dir="${stage.dir}/share/test/certificates"/>
+            <delete file="${stage.dir}/usercert.pem"/>
+            <delete file="${stage.dir}/hostcert.pem"/>
+            <delete file="${stage.dir}/userkey.pem"/>
+            <delete file="${stage.dir}/hostkey.pem"/>
+        </target>
+	<target name="doc"/>
+
+    <target name="localdistbin"/>
+
+    <target name="localcompile"/>
+
+    <target name="distbin">
+        <!-- do a local install -->
+        <mkdir dir="${module.dir}/tempbuild"/>
+        <exec  executable="${module.dir}/bin/generate-test-certificates.sh">  
+            <arg line="--all tempbuild/share/test/certificates"/>
+            <env key="LD_LIBRARY_PATH" path="${with.globus.prefix}/lib:${stage.abs.dir}/lib"/>
+            <env key="PATH" path="${env.PATH}:${with.globus.prefix}/bin:${stage.abs.dir}/bin"/>
+        </exec>
+
+        <!-- pack everything together -->
+		<if>
+			<isset property="isWindows"/>
+			<then>
+				<zip destfile="${module.dir}/${dist.dir}/${module.package.name}-${module.version}_bin.zip"
+					basedir="tempbuild"
+					includes="**/*"/>
+			</then>
+			<else>
+				<exec executable="tar" dir="tempbuild">
+					<arg line="-czf ${module.dir}/${dist.dir}/${module.package.name}-${module.version}_bin.tar.gz ." />
+				</exec>
+			</else>
+		</if>
+	
+		<!-- clean up: remove temporary directories -->
+		<delete dir="tempbuild" />
+    </target>
+
+    <target name="dist" depends="envcheck, stage, distbin, package.spec, packager"/>
+
+    <target name="stage" depends="envcheck,clean">
+        <!--
+            [for historical reasons the name remains, but functionality changed]
+            The glite.security.stage.all.certs property can be used to pass 
+            command line arguments to the certificate generator script. 
+            
+            By default -all option is passed to generate all test certificates.
+            One can also use the - -some option to generate only some the ones 
+            necessary for simple client-server tests. With the - -extra # option
+            one can request the generation of some extra user certificates.
+         -->
+        <property name="glite.security.stage.all.certs" value="--all"/>
+        <echo>Staging test certificates to '${stage.dir}/share/test/certificates',</echo>
+        <echo>using options: '${glite.security.stage.all.certs}'</echo>
+        <exec  executable="${module.dir}/bin/generate-test-certificates.sh">  
+            <arg line="${glite.security.stage.all.certs} ${stage.dir}/share/test/certificates"/>
+            <env key="LD_LIBRARY_PATH" path="${with.globus.prefix}/lib:${stage.abs.dir}/lib"/>
+            <env key="PATH" path="${env.PATH}:${with.globus.prefix}/bin:${stage.abs.dir}/bin"/>
+        </exec>
+    </target>
+	
+</project>		

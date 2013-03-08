@@ -1,0 +1,9 @@
+# updating the host certificate with FQDN
+%{prefix}/share/test/certificates/bin/regenerate-host-certificate.sh
+echo ""
+echo "# test certificates can be used with the following environment variables:"
+echo "export X509_CERT_DIR=%{prefix}/share/test/certificates/grid-security/certificates" 
+echo "export X509_USER_CERT=%{prefix}/share/test/certificates/home/usercert.pem"
+echo "export X509_USER_KEY=%{prefix}/share/test/certificates/home/userkey.pem"
+echo "export VOMSDIR=%{prefix}/share/test/certificates/grid-security/vomsdir"
+echo ""

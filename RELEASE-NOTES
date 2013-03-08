@@ -1,0 +1,24 @@
+*** Release glite-security-test-utils_R_1_6_0 2006-08-30
+
+	- Generating multiple user certificates, even with VOMS extensions (using
+	  voms-proxy-fake), including wrong ones.  (see also bug #17362)
+	  $GLITE_LOCATION/share/test/certificate/grid-security/vomsdir/
+	  $GLITE_LOCATION/share/test/certificate/home/voms-*.pem
+	  
+	- Test certificates with serialnumber and emailaddress in the DN.
+
+	- Adding default_md=sha1 to be compatible with OpenSSL 0.9.8x 
+	  and be able to generate CRLs. Earlier versions ignore this field.
+
+	- Enabled RPM generation: the generated certificates and
+	  proxies are valid only for a week, hence the date in the
+	  package's age.
+	
+	- regenerate-host-certificate.sh: script for the RPM, that
+	  re-generates a host specific certificate in
+	  $GLITE_LOCATION/share/test/certificate/grid-security/host{cert,key}.pem
+
+	- Added 4096bit certificates to the set.
+
+	- First release as a package.
+
